@@ -1,3 +1,7 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -5,12 +9,6 @@ import {
   Legend,
 } from "chart.js";
 import { Pie } from "react-chartjs-2";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
-
-"use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -24,6 +22,9 @@ export default function Dashboard() {
   const [filter, setFilter] = useState("All");
 
   useEffect(() => {
+    // Register ChartJS plugins on client side only
+    ChartJS.register(ArcElement, Tooltip, Legend);
+
     const user = localStorage.getItem("user");
     if (!user) router.push("/login");
 
