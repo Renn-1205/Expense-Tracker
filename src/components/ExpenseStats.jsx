@@ -1,20 +1,22 @@
 "use client";
 
-import { useExpenses } from "@/src/context/ExpenseContext";
-import { useTheme } from "@/src/context/ThemeContext";
-import { formatCurrency } from "@/src/utils/formatting";
+export function ExpenseStats({ expenses }) {
+  if (!expenses) expenses = [];
 
-export function ExpenseStats() {
-  const { darkMode } = useTheme();
-  const { expenses, getCategoryTotals, getTotalExpenses } = useExpenses();
+  const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const categoryTotals = {};
+  expenses.forEach((expense) => {
+    categoryTotals[expense.category] =
+      (categoryTotals[expense.category] || 0) + expense.amount;
+  });
 
-  const total = getTotalExpenses();
-  const categoryTotals = getCategoryTotals();
+  const average =
+    expenses.length > 0 ? (total / expenses.length).toFixed(2) : 0;
 
   const stats = [
     {
       label: "Total Expenses",
-      value: formatCurrency(total),
+      value: `$${total.toFixed(2)}`,
       icon: "💰",
       color: "from-blue-500 to-blue-600",
     },
@@ -32,7 +34,7 @@ export function ExpenseStats() {
     },
     {
       label: "Average Expense",
-      value: expenses.length > 0 ? formatCurrency(total / expenses.length) : "$0",
+      value: `$${average}`,
       icon: "📈",
       color: "from-orange-500 to-orange-600",
     },
@@ -48,9 +50,9 @@ export function ExpenseStats() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm opacity-90">{stat.label}</p>
-              <p className="text-2xl font-bold mt-2">{stat.value}</p>
+              <p className="text-3xl font-bold mt-3">{stat.value}</p>
             </div>
-            <span className="text-3xl">{stat.icon}</span>
+            <span className="text-4xl">{stat.icon}</span>
           </div>
         </div>
       ))}

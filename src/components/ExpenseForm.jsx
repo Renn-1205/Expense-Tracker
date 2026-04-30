@@ -1,16 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { useExpenses } from "@/src/context/ExpenseContext";
-import { useTheme } from "@/src/context/ThemeContext";
-import { validateExpense } from "@/src/utils/validation";
-import { CATEGORIES } from "@/src/utils/formatting";
 
-export function ExpenseForm({ onSuccess }) {
-  const { darkMode } = useTheme();
-  const { addExpense } = useExpenses();
+const CATEGORIES = [
+  "Food",
+  "Transport",
+  "Entertainment",
+  "Shopping",
+  "Utilities",
+  "Health",
+  "Education",
+  "Other",
+];
+
+export function ExpenseForm({ onAddExpense }) {
   const [formData, setFormData] = useState({
-    title: "",
+    description: "",
     amount: "",
     category: "Food",
     date: new Date().toISOString().split("T")[0],
@@ -23,14 +28,22 @@ export function ExpenseForm({ onSuccess }) {
     setErrors({});
     setSuccess("");
 
-    const validation = validateExpense(formData);
-    if (!validation.isValid) {
-      setErrors(validation.errors);
+    // Validate
+    const newErrors = {};
+    if (!formData.description.trim()) {
+      newErrors.description = "Description is required";
+    }
+    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+      newErrors.amount = "Valid amount is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    addExpense({
-      title: formData.title,
+    onAddExpense({
+      description: formData.description,
       amount: parseFloat(formData.amount),
       category: formData.category,
       date: formData.date,
@@ -38,14 +51,13 @@ export function ExpenseForm({ onSuccess }) {
 
     setSuccess("✅ Expense added successfully!");
     setFormData({
-      title: "",
+      description: "",
       amount: "",
       category: "Food",
       date: new Date().toISOString().split("T")[0],
     });
 
     setTimeout(() => setSuccess(""), 3000);
-    onSuccess?.();
   };
 
   const handleChange = (e) => {
@@ -63,139 +75,102 @@ export function ExpenseForm({ onSuccess }) {
   };
 
   return (
-    <div
-      className={`${
-        darkMode
-          ? "bg-slate-800 border-slate-700"
-          : "bg-white border-blue-200"
-      } border rounded-xl shadow-lg p-6`}
-    >
-      <h2 className={`text-xl font-bold mb-4 ${darkMode ? "text-white" : "text-gray-800"}`}>
-        ➕ Add New Expense
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-lg p-6 sticky top-8">
+      <h2 className="text-2xl font-bold mb-6 text-slate-900">
+        ➕ Add Expense
       </h2>
 
       {success && (
-        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+        <div className="mb-4 p-3 bg-green-50 border border-green-300 text-green-700 rounded-lg text-sm">
           {success}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Title */}
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-              Title
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="e.g., Lunch at restaurant"
-              className={`w-full px-4 py-2 rounded-lg border ${
-                errors.title
-                  ? "border-red-500"
-                  : darkMode
-                  ? "border-slate-600"
-                  : "border-gray-300"
-              } ${
-                darkMode
-                  ? "bg-slate-700 text-white"
-                  : "bg-white text-gray-900"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-            {errors.title && (
-              <p className="text-red-500 text-sm mt-1">{errors.title}</p>
-            )}
-          </div>
-
-          {/* Amount */}
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-              Amount ($)
-            </label>
-            <input
-              type="number"
-              name="amount"
-              value={formData.amount}
-              onChange={handleChange}
-              placeholder="0.00"
-              step="0.01"
-              min="0"
-              className={`w-full px-4 py-2 rounded-lg border ${
-                errors.amount
-                  ? "border-red-500"
-                  : darkMode
-                  ? "border-slate-600"
-                  : "border-gray-300"
-              } ${
-                darkMode
-                  ? "bg-slate-700 text-white"
-                  : "bg-white text-gray-900"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-            {errors.amount && (
-              <p className="text-red-500 text-sm mt-1">{errors.amount}</p>
-            )}
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-              Category
-            </label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className={`w-full px-4 py-2 rounded-lg border ${
-                darkMode
-                  ? "bg-slate-700 text-white border-slate-600"
-                  : "bg-white text-gray-900 border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat.name} value={cat.name}>
-                  {cat.icon} {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Date */}
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-              Date
-            </label>
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className={`w-full px-4 py-2 rounded-lg border ${
-                errors.date
-                  ? "border-red-500"
-                  : darkMode
-                  ? "border-slate-600"
-                  : "border-gray-300"
-              } ${
-                darkMode
-                  ? "bg-slate-700 text-white"
-                  : "bg-white text-gray-900"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-            {errors.date && (
-              <p className="text-red-500 text-sm mt-1">{errors.date}</p>
-            )}
-          </div>
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Description
+          </label>
+          <input
+            type="text"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="e.g., Lunch at restaurant"
+            className={`w-full px-4 py-2 rounded-lg border transition ${
+              errors.description
+                ? "border-red-500 focus:ring-red-500"
+                : "border-slate-300 focus:ring-blue-500"
+            } focus:outline-none focus:ring-2`}
+          />
+          {errors.description && (
+            <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+          )}
         </div>
 
+        {/* Amount */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Amount ($)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            name="amount"
+            value={formData.amount}
+            onChange={handleChange}
+            placeholder="0.00"
+            className={`w-full px-4 py-2 rounded-lg border transition ${
+              errors.amount
+                ? "border-red-500 focus:ring-red-500"
+                : "border-slate-300 focus:ring-blue-500"
+            } focus:outline-none focus:ring-2`}
+          />
+          {errors.amount && (
+            <p className="text-red-500 text-xs mt-1">{errors.amount}</p>
+          )}
+        </div>
+
+        {/* Category */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Category
+          </label>
+          <select
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Date */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Date
+          </label>
+          <input
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 rounded-lg transition transform hover:scale-105"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
         >
-          ✅ Add Expense
+          💾 Add Expense
         </button>
       </form>
     </div>

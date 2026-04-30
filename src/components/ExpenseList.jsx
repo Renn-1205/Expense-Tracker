@@ -1,72 +1,83 @@
 "use client";
 
-import { useExpenses } from "@/src/context/ExpenseContext";
-import { useTheme } from "@/src/context/ThemeContext";
-import { formatCurrency, formatDate, getCategoryIcon } from "@/src/utils/formatting";
+const CATEGORY_ICONS = {
+  Food: "🍔",
+  Transport: "🚗",
+  Entertainment: "🎬",
+  Shopping: "🛍️",
+  Utilities: "💡",
+  Health: "🏥",
+  Education: "📚",
+  Other: "📦",
+};
 
-export function ExpenseList({ filter = "All" }) {
-  const { darkMode } = useTheme();
-  const { expenses, deleteExpense } = useExpenses();
-
-  const filtered =
-    filter === "All"
-      ? expenses
-      : expenses.filter((e) => e.category === filter);
-
-  const sorted = [...filtered].sort(
-    (a, b) => new Date(b.date) - new Date(a.date)
-  );
-
-  if (sorted.length === 0) {
+export function ExpenseList({ expenses, onDeleteExpense }) {
+  if (!expenses || expenses.length === 0) {
     return (
-      <div
-        className={`${
-          darkMode
-            ? "bg-slate-800 text-gray-400"
-            : "bg-gray-50 text-gray-500"
-        } rounded-xl p-8 text-center`}
-      >
-        <p className="text-lg">📭 No expenses yet</p>
+      <div className="bg-white rounded-2xl p-8 text-center border border-slate-200">
+        <p className="text-2xl text-slate-500">📭 No expenses yet</p>
+        <p className="text-slate-400 mt-2">Add an expense to get started</p>
       </div>
     );
   }
 
+  const sorted = [...expenses].sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return `$${amount.toFixed(2)}`;
+  };
+
   return (
-    <div className="space-y-3">
-      {sorted.map((expense) => (
-        <div
-          key={expense.id}
-          className={`${
-            darkMode
-              ? "bg-slate-800 border-slate-700 hover:bg-slate-750"
-              : "bg-white border-gray-200 hover:bg-gray-50"
-          } border rounded-lg p-4 flex items-center justify-between transition`}
-        >
-          <div className="flex items-center gap-4 flex-1">
-            <span className="text-2xl">{getCategoryIcon(expense.category)}</span>
-            <div className="flex-1">
-              <h3 className={`font-semibold ${darkMode ? "text-white" : "text-gray-900"}`}>
-                {expense.title}
-              </h3>
-              <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-                {expense.category} • {formatDate(expense.date)}
-              </p>
+    <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+      <h2 className="text-2xl font-bold mb-6 text-slate-900">
+        📋 Expense History
+      </h2>
+
+      <div className="space-y-3">
+        {sorted.map((expense) => (
+          <div
+            key={expense.id}
+            className="flex items-center justify-between p-4 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-slate-50 transition"
+          >
+            <div className="flex items-center gap-4 flex-1">
+              <span className="text-2xl">
+                {CATEGORY_ICONS[expense.category] || "📦"}
+              </span>
+              <div>
+                <h3 className="font-semibold text-slate-900">
+                  {expense.description}
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {expense.category} • {formatDate(expense.date)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <span className="text-lg font-bold text-blue-600">
+                {formatCurrency(expense.amount)}
+              </span>
+              <button
+                onClick={() => onDeleteExpense(expense.id)}
+                className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition text-sm font-medium"
+              >
+                🗑️ Delete
+              </button>
             </div>
           </div>
-
-          <div className="flex items-center gap-4">
-            <span className={`text-lg font-bold ${darkMode ? "text-green-400" : "text-green-600"}`}>
-              {formatCurrency(expense.amount)}
-            </span>
-            <button
-              onClick={() => deleteExpense(expense.id)}
-              className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition"
-            >
-              🗑️ Delete
-            </button>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
