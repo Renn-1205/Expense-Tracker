@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [date, setDate] = useState("");
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("All");
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     // Register ChartJS plugins on client side only
